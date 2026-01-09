@@ -5,74 +5,106 @@ import java.util.Random;
 
 public class JatekSzolgaltatas {
     private Palya palya;
-    private final AdatbazisKezelo db;
-    private final Random rand = new Random();
+    private AdatbazisKezelo adatbazis;
+    private Random random;
 
-    public JatekSzolgaltatas(int n, int m) {
-        this.palya = new Palya(n, m);
-        this.db = new AdatbazisKezelo();
+    public JatekSzolgaltatas() {
+        this.palya = new Palya(10, 10);
+        this.adatbazis = new AdatbazisKezelo();
+        this.random = new Random();
     }
 
     public Palya getPalya() { return palya; }
     public void setPalya(Palya p) { this.palya = p; }
-    public AdatbazisKezelo getDb() { return db; }
+    public AdatbazisKezelo getAdatbazis() { return adatbazis; }
 
-    public boolean lepes(Koordinata k, Jel jel) {
-        if (!szabalyosE(k)) return false;
-        palya.jelElhelyezese(k, jel);
+    public boolean lepes(int sor, int oszlop, Jel jel) {
+        // 1. Ellenőrizzük, hogy szabályos-e
+        if (szabalyosE(sor, oszlop) == false) {
+            return false;
+        }
+        // 2. Ha jó, lerakjuk
+        palya.lerak(sor, oszlop, jel);
         return true;
     }
 
-    public boolean szabalyosE(Koordinata k) {
-        if (palya.getMezoErtek(k.sor(), k.oszlop()) == null) return false; // pályán kívül
-        if (palya.getMezoErtek(k.sor(), k.oszlop()) != Jel.URES) return false; // foglalt
+    public boolean szabalyosE(int sor, int oszlop) {
+        // Pályán kívül van?
+        if (palya.getMezo(sor, oszlop) == null) return false;
+        // Foglalt?
+        if (palya.getMezo(sor, oszlop) != Jel.URES) return false;
 
-        // Ha üres a pálya, bárhova léphet (első lépés)
-        boolean uresPalya = true;
-        cimke: for(int i=0; i<palya.getSorokSzama(); i++)
-            for(int j=0; j<palya.getOszlopokSzama(); j++)
-                if(palya.getMezoErtek(i, j) != Jel.URES) { uresPalya = false; break cimke; }
-
-        if (uresPalya) return true;
-
-        // Szomszéd vizsgálat
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                if (i==0 && j==0) continue;
-                Jel szomszed = palya.getMezoErtek(k.sor()+i, k.oszlop()+j);
-                if (szomszed != null && szomszed != Jel.URES) return true;
+        // Üres a pálya? (Első lépés)
+        boolean ures = true;
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                if (palya.getMezo(i, j) != Jel.URES) {
+                    ures = false;
+                }
             }
         }
-        return false;
+        if (ures) return true; // Ha üres, bárhova rakhatunk
+
+        // Szomszéd vizsgálat (van-e mellette valami?)
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if (i == 0 && j == 0) continue; // Saját magát ne nézze
+
+                Jel szomszed = palya.getMezo(sor + i, oszlop + j);
+                if (szomszed != null && szomszed != Jel.URES) {
+                    return true; // Találtunk szomszédot, jó a lépés!
+                }
+            }
+        }
+        return false; // Nincs szomszéd
     }
 
     public void gepiLepes() {
-        for(int i=0; i<1000; i++) {
-            Koordinata k = new Koordinata(rand.nextInt(palya.getSorokSzama()), rand.nextInt(palya.getOszlopokSzama()));
-            if (szabalyosE(k)) {
-                palya.jelElhelyezese(k, Jel.O);
-                System.out.println("Gép lépése: " + (k.sor()+1) + " " + (char)('A'+k.oszlop()));
+        // A gép próbálkozik 1000-szer véletlenszerűen
+        for (int i = 0; i < 1000; i++) {
+            int sor = random.nextInt(10);
+            int oszlop = random.nextInt(10);
+
+            if (szabalyosE(sor, oszlop)) {
+                palya.lerak(sor, oszlop, Jel.O);
+                System.out.println("Gép lépése: " + (sor + 1) + " " + (char)('A' + oszlop));
                 return;
             }
         }
     }
 
-    public boolean nyertE(Jel jel) {
-        for (int i = 0; i < palya.getSorokSzama(); i++) {
-            for (int j = 0; j < palya.getOszlopokSzama(); j++) {
-                if (palya.getMezoErtek(i, j) == jel) {
-                    if (check(i, j, 0, 1, jel) || check(i, j, 1, 0, jel) ||
-                            check(i, j, 1, 1, jel) || check(i, j, 1, -1, jel)) return true;
+    // NYERÉS ELLENŐRZÉSE (4 egy sorban)
+    public boolean nyertE(Jel kinek) {
+        // Végigmegyünk minden mezőn
+        for (int sor = 0; sor < 10; sor++) {
+            for (int oszlop = 0; oszlop < 10; oszlop++) {
+
+                // Ha találunk egy jelet, megnézzük 4 irányba
+                if (palya.getMezo(sor, oszlop) == kinek) {
+                    // Vízszintes
+                    if (ellenoriz(sor, oszlop, 0, 1, kinek)) return true;
+                    // Függőleges
+                    if (ellenoriz(sor, oszlop, 1, 0, kinek)) return true;
+                    // Átlós le
+                    if (ellenoriz(sor, oszlop, 1, 1, kinek)) return true;
+                    // Átlós fel
+                    if (ellenoriz(sor, oszlop, 1, -1, kinek)) return true;
                 }
             }
         }
         return false;
     }
 
-    private boolean check(int r, int c, int dr, int dc, Jel jel) {
-        for (int k = 1; k < 4; k++) { // +3 további mezőt nézünk (összesen 4)
-            if (palya.getMezoErtek(r + k*dr, c + k*dc) != jel) return false;
+    // Segédfüggvény: megszámolja, van-e 4 egymás mellett
+    private boolean ellenoriz(int sor, int oszlop, int dSor, int dOszlop, Jel kinek) {
+        int talalat = 0;
+        for (int k = 0; k < 4; k++) {
+            int r = sor + k * dSor;
+            int c = oszlop + k * dOszlop;
+            if (palya.getMezo(r, c) == kinek) {
+                talalat++;
+            }
         }
-        return true;
+        return talalat == 4; // Ha megvan a 4, akkor igaz
     }
 }

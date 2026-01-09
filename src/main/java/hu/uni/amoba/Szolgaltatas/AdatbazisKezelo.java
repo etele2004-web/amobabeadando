@@ -4,65 +4,69 @@ import java.sql.*;
 
 public class AdatbazisKezelo {
 
-    // Helyi fájlba menti az adatbázist a projekt mappájába
-    private static final String DB_URL = "jdbc:h2:./amoba_adatbazis";
-    private static final String USER = "sa";
-    private static final String PASS = "";
+    // Csak a kötelező dolgok
+    String url = "jdbc:h2:./amoba_db";
+    String user = "sa";
+    String jelszo = "";
 
     public AdatbazisKezelo() {
-        try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
-             Statement stmt = conn.createStatement()) {
+        try {
+            Connection kapcs = DriverManager.getConnection(url, user, jelszo);
+            Statement parancs = kapcs.createStatement();
 
-            String sql = "CREATE TABLE IF NOT EXISTS EREDMENYEK " +
-                    "(id INTEGER AUTO_INCREMENT PRIMARY KEY, " +
-                    " nev VARCHAR(255), " +
-                    " gyozelmek INTEGER)";
-            stmt.executeUpdate(sql);
+            // Tábla létrehozása
+            String sql = "CREATE TABLE IF NOT EXISTS EREDMENYEK (nev VARCHAR(255), pont INT)";
+            parancs.executeUpdate(sql);
 
-        } catch (SQLException e) {
-            System.err.println("Adatbázis hiba: " + e.getMessage());
+            kapcs.close();
+        } catch (Exception e) {
+            System.out.println("Adatbázis hiba: " + e.getMessage());
         }
     }
 
-    public void gyozelemMentese(String nev) {
-        String selectSql = "SELECT gyozelmek FROM EREDMENYEK WHERE nev = ?";
-        try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
-             PreparedStatement pstmt = conn.prepareStatement(selectSql)) {
+    public void mentes(String nev) {
+        try {
+            Connection kapcs = DriverManager.getConnection(url, user, jelszo);
 
-            pstmt.setString(1, nev);
-            ResultSet rs = pstmt.executeQuery();
+            // 1. Megnézzük, benne van-e már
+            PreparedStatement kereses = kapcs.prepareStatement("SELECT pont FROM EREDMENYEK WHERE nev = ?");
+            kereses.setString(1, nev);
+            ResultSet eredmeny = kereses.executeQuery();
 
-            if (rs.next()) {
-                int gyoz = rs.getInt("gyozelmek");
-                try (PreparedStatement update = conn.prepareStatement("UPDATE EREDMENYEK SET gyozelmek = ? WHERE nev = ?")) {
-                    update.setInt(1, gyoz + 1);
-                    update.setString(2, nev);
-                    update.executeUpdate();
-                }
+            if (eredmeny.next()) {
+                // Ha benne van, növeljük a pontot
+                int pont = eredmeny.getInt("pont");
+                PreparedStatement frissites = kapcs.prepareStatement("UPDATE EREDMENYEK SET pont = ? WHERE nev = ?");
+                frissites.setInt(1, pont + 1);
+                frissites.setString(2, nev);
+                frissites.executeUpdate();
             } else {
-                try (PreparedStatement insert = conn.prepareStatement("INSERT INTO EREDMENYEK (nev, gyozelmek) VALUES (?, 1)")) {
-                    insert.setString(1, nev);
-                    insert.executeUpdate();
-                }
+                // Ha nincs, beszúrjuk
+                PreparedStatement beszuras = kapcs.prepareStatement("INSERT INTO EREDMENYEK VALUES (?, 1)");
+                beszuras.setString(1, nev);
+                beszuras.executeUpdate();
             }
-        } catch (SQLException e) {
+            kapcs.close();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void ranglistaKiirasa() {
-        System.out.println("\n=== RANGLISTA (TOP 10) ===");
-        try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT nev, gyozelmek FROM EREDMENYEK ORDER BY gyozelmek DESC LIMIT 10")) {
+    public void listazas() {
+        System.out.println("=== RANGLISTA ===");
+        try {
+            Connection kapcs = DriverManager.getConnection(url, user, jelszo);
+            Statement parancs = kapcs.createStatement();
+            ResultSet eredmeny = parancs.executeQuery("SELECT * FROM EREDMENYEK ORDER BY pont DESC LIMIT 10");
 
-            int i = 1;
-            while (rs.next()) {
-                System.out.println(i++ + ". " + rs.getString("nev") + " - " + rs.getInt("gyozelmek") + " győzelem");
+            while (eredmeny.next()) {
+                String n = eredmeny.getString("nev");
+                int p = eredmeny.getInt("pont");
+                System.out.println(n + " - " + p + " győzelem");
             }
-        } catch (SQLException e) {
-            System.out.println("Nincs elérhető adat.");
+            kapcs.close();
+        } catch (Exception e) {
+            System.out.println("Nem sikerült a lista.");
         }
-        System.out.println("==========================\n");
     }
 }

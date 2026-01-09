@@ -1,50 +1,51 @@
 package hu.uni.amoba.Modell;
 
-import java.util.Arrays;
-
 public class Palya {
-    private final int sorokSzama;
-    private final int oszlopokSzama;
-    private final Jel[][] racs;
+    private int sorok;
+    private int oszlopok;
+    private Jel[][] tabla; // Sima 2D tömb
 
-    public Palya(int sorokSzama, int oszlopokSzama) {
-        this.sorokSzama = sorokSzama;
-        this.oszlopokSzama = oszlopokSzama;
-        this.racs = new Jel[sorokSzama][oszlopokSzama];
-        for (int i = 0; i < sorokSzama; i++) {
-            Arrays.fill(racs[i], Jel.URES);
-        }
-    }
+    public Palya(int sorok, int oszlopok) {
+        this.sorok = sorok;
+        this.oszlopok = oszlopok;
+        this.tabla = new Jel[sorok][oszlopok];
 
-    public void jelElhelyezese(Koordinata k, Jel jel) {
-        racs[k.sor()][k.oszlop()] = jel;
-    }
-
-    public Jel getMezoErtek(int sor, int oszlop) {
-        if (sor < 0 || sor >= sorokSzama || oszlop < 0 || oszlop >= oszlopokSzama) {
-            return null;
-        }
-        return racs[sor][oszlop];
-    }
-
-    public int getSorokSzama() { return sorokSzama; }
-    public int getOszlopokSzama() { return oszlopokSzama; }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("  ");
-        for (int j = 0; j < oszlopokSzama; j++) {
-            sb.append((char)('A' + j)).append(" ");
-        }
-        sb.append("\n");
-        for (int i = 0; i < sorokSzama; i++) {
-            sb.append(i + 1).append(i < 9 ? " " : "");
-            for (int j = 0; j < oszlopokSzama; j++) {
-                sb.append(racs[i][j]).append(" ");
+        // Két for ciklussal feltöltjük üreessel
+        for (int i = 0; i < sorok; i++) {
+            for (int j = 0; j < oszlopok; j++) {
+                tabla[i][j] = Jel.URES;
             }
-            sb.append("\n");
         }
-        return sb.toString();
+    }
+
+    public void lerak(int sor, int oszlop, Jel jel) {
+        tabla[sor][oszlop] = jel;
+    }
+
+    public Jel getMezo(int sor, int oszlop) {
+        // Egyszerű ellenőrzés: benne vagyunk-e a keretben?
+        if (sor < 0 || sor >= sorok) return null;
+        if (oszlop < 0 || oszlop >= oszlopok) return null;
+
+        return tabla[sor][oszlop];
+    }
+
+    public int getSorok() { return sorok; }
+    public int getOszlopok() { return oszlopok; }
+
+    // Így írja ki a pályát egy kezdő:
+    public String toString() {
+        String kimenet = "  A B C D E F G H I J\n"; // Fejléc fixen
+
+        for (int i = 0; i < sorok; i++) {
+            kimenet = kimenet + (i + 1) + " "; // Sor száma
+            if (i < 9) kimenet = kimenet + " "; // Hogy szépen álljon a 10-es
+
+            for (int j = 0; j < oszlopok; j++) {
+                kimenet = kimenet + tabla[i][j] + " ";
+            }
+            kimenet = kimenet + "\n"; // Új sor
+        }
+        return kimenet;
     }
 }

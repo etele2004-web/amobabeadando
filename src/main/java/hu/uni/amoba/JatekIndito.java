@@ -6,61 +6,66 @@ import java.util.Scanner;
 
 public class JatekIndito {
     public static void main(String[] args) {
-        System.out.println("=== AMŐBA JÁTÉK (MAGYAR) ===");
-        Scanner sc = new Scanner(System.in);
-        JatekSzolgaltatas jatek = new JatekSzolgaltatas(10, 10);
+        System.out.println("=== AMOBA JATEK ===");
 
-        jatek.getDb().ranglistaKiirasa();
+        JatekSzolgaltatas jatek = new JatekSzolgaltatas();
+        Scanner beolvaso = new Scanner(System.in);
 
-        System.out.print("Játékos neve: ");
-        String nev = sc.nextLine();
+        // Lista kiírása
+        jatek.getAdatbazis().listazas();
 
-        System.out.println("Betöltés fájlból? (i/n)");
-        if (sc.nextLine().equalsIgnoreCase("i")) {
-            try {
-                jatek.setPalya(XmlKezelo.betoltes("mentes.xml"));
-                System.out.println("Sikeres betöltés!");
-            } catch (Exception e) {
-                System.out.println("Hiba a betöltésnél.");
-            }
+        System.out.print("Neved: ");
+        String nev = beolvaso.nextLine();
+
+        System.out.println("Betöltés? (i/n)");
+        String valasz = beolvaso.nextLine();
+        if (valasz.equals("i")) {
+            Palya betoltott = XmlKezelo.betoltes();
+            jatek.setPalya(betoltott);
+            System.out.println("Betoltve!");
         }
 
         while (true) {
+            // Kirajzoljuk a pályát
             System.out.println(jatek.getPalya());
-            System.out.println(nev + " (X) lépése (pl: 5 C) vagy 'mentes':");
-            String in = sc.nextLine().trim();
 
-            if (in.equalsIgnoreCase("mentes")) {
-                try {
-                    XmlKezelo.mentes(jatek.getPalya(), nev, "mentes.xml");
-                    System.out.println("Mentve!"); break;
-                } catch (Exception e) { System.out.println("Mentési hiba."); }
+            System.out.println("Te jössz (pl: 5 C) vagy 'mentes':");
+            String bemenet = beolvaso.nextLine();
+
+            if (bemenet.equals("mentes")) {
+                XmlKezelo.mentes(jatek.getPalya(), nev);
+                System.out.println("Elmentve. Viszlát!");
+                break;
             }
 
             try {
-                String[] s = in.split(" ");
-                Koordinata k = new Koordinata(Integer.parseInt(s[0])-1, s[1].toUpperCase().charAt(0)-'A');
+                // Bemenet feldolgozása
+                String[] reszek = bemenet.split(" ");
+                int sor = Integer.parseInt(reszek[0]) - 1;
+                // 'A' betű kivonása, így kapunk számot (B - A = 1)
+                int oszlop = reszek[1].charAt(0) - 'A';
 
-                if (jatek.lepes(k, Jel.X)) {
+                boolean siker = jatek.lepes(sor, oszlop, Jel.X);
+
+                if (siker) {
                     if (jatek.nyertE(Jel.X)) {
                         System.out.println(jatek.getPalya());
-                        System.out.println("NYERTÉL! ");
-                        jatek.getDb().gyozelemMentese(nev);
-                        jatek.getDb().ranglistaKiirasa();
+                        System.out.println("NYERTEL!");
+                        jatek.getAdatbazis().mentes(nev);
                         break;
                     }
-                    System.out.println("Gép jön");
+
                     jatek.gepiLepes();
                     if (jatek.nyertE(Jel.O)) {
                         System.out.println(jatek.getPalya());
-                        System.out.println("VESZTETTÉL!");
+                        System.out.println("VESZTETTEL!");
                         break;
                     }
                 } else {
-                    System.out.println("Hibás lépés!");
+                    System.out.println("Nem jo lepes!");
                 }
             } catch (Exception e) {
-                System.out.println("Formátum hiba! Pl: 5 C");
+                System.out.println("Rossz formatum!");
             }
         }
     }

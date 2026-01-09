@@ -1,18 +1,12 @@
 package hu.uni.amoba.Modell;
 
 public enum Jel {
-    URES('.'),
-    X('X'),
-    O('O');
+    URES, X, O;
 
-    private final char karakter;
-
-    Jel(char karakter) {
-        this.karakter = karakter;
-    }
-
-    @Override
+    // Sima toString, nem kell bonyolítani
     public String toString() {
-        return String.valueOf(karakter);
+        if (this == X) return "X";
+        if (this == O) return "O";
+        return ".";
     }
 }
