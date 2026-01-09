@@ -1,67 +1,67 @@
 package hu.uni.amoba;
 
-import hu.uni.amoba.Modell.Koordinata;
-import hu.uni.amoba.Modell.Jel;
-import hu.uni.amoba.Szolgaltatas.JatekSzolgaltatas;
-
-import java.io.IOException;
+import hu.uni.amoba.Modell.*;
+import hu.uni.amoba.Szolgaltatas.*;
 import java.util.Scanner;
 
 public class JatekIndito {
-
     public static void main(String[] args) {
-        System.out.println("=== MAGYAR AMŐBA JÁTÉK ===");
-
-        Scanner olvaso = new Scanner(System.in);
+        System.out.println("=== AMŐBA JÁTÉK (MAGYAR) ===");
+        Scanner sc = new Scanner(System.in);
         JatekSzolgaltatas jatek = new JatekSzolgaltatas(10, 10);
 
+        jatek.getDb().ranglistaKiirasa();
+
         System.out.print("Játékos neve: ");
-        String jatekosNev = olvaso.nextLine();
-        System.out.println("Üdv " + jatekosNev + "! Te vagy az X.");
+        String nev = sc.nextLine();
 
         System.out.println("Betöltés fájlból? (i/n)");
-        if (olvaso.nextLine().equalsIgnoreCase("i")) {
+        if (sc.nextLine().equalsIgnoreCase("i")) {
             try {
-                jatek.jatekBetoltese("mentes.txt");
-            } catch (IOException e) {
-                System.out.println("Nincs mentés, új játék indul.");
+                jatek.setPalya(XmlKezelo.betoltes("mentes.xml"));
+                System.out.println("Sikeres betöltés!");
+            } catch (Exception e) {
+                System.out.println("Hiba a betöltésnél.");
             }
         }
 
-        boolean jatekFut = true;
-
-        while (jatekFut) {
+        while (true) {
             System.out.println(jatek.getPalya());
+            System.out.println(nev + " (X) lépése (pl: 5 C) vagy 'mentes':");
+            String in = sc.nextLine().trim();
 
-            System.out.println("Add meg a lépést (pl. 5 C): ");
+            if (in.equalsIgnoreCase("mentes")) {
+                try {
+                    XmlKezelo.mentes(jatek.getPalya(), nev, "mentes.xml");
+                    System.out.println("Mentve!"); break;
+                } catch (Exception e) { System.out.println("Mentési hiba."); }
+            }
+
             try {
-                String sorSzoveg = olvaso.nextLine();
-                String[] darabok = sorSzoveg.trim().split("\\s+");
+                String[] s = in.split(" ");
+                Koordinata k = new Koordinata(Integer.parseInt(s[0])-1, s[1].toUpperCase().charAt(0)-'A');
 
-                int sorIndex = Integer.parseInt(darabok[0]) - 1;
-                int oszlopIndex = oszlopBetubolSzamma(darabok[1]);
-
-                Koordinata koord = new Koordinata(sorIndex, oszlopIndex);
-
-                if (jatek.lepesTetele(koord, Jel.X)) {
-                    System.out.println("Sikeres lépés.");
-
-                    System.out.println("Gép gondolkodik...");
-                    jatek.gepiLepes();
-
-                    try {
-                        jatek.jatekMentese("automatikus_mentes.txt");
-                    } catch (IOException e) {
-                        System.out.println("Mentési hiba.");
+                if (jatek.lepes(k, Jel.X)) {
+                    if (jatek.nyertE(Jel.X)) {
+                        System.out.println(jatek.getPalya());
+                        System.out.println("NYERTÉL! ");
+                        jatek.getDb().gyozelemMentese(nev);
+                        jatek.getDb().ranglistaKiirasa();
+                        break;
                     }
+                    System.out.println("Gép jön");
+                    jatek.gepiLepes();
+                    if (jatek.nyertE(Jel.O)) {
+                        System.out.println(jatek.getPalya());
+                        System.out.println("VESZTETTÉL!");
+                        break;
+                    }
+                } else {
+                    System.out.println("Hibás lépés!");
                 }
             } catch (Exception e) {
-                System.out.println("Hibás formátum! Helyes példa: 5 C");
+                System.out.println("Formátum hiba! Pl: 5 C");
             }
         }
-    }
-
-    private static int oszlopBetubolSzamma(String betu) {
-        return betu.toUpperCase().charAt(0) - 'A';
     }
 }

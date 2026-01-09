@@ -2,21 +2,17 @@ package hu.uni.amoba.Modell;
 
 public enum Jel {
     URES('.'),
-    X('X'), // Ember
-    O('O'); // Gép
+    X('X'),
+    O('O');
 
-    private final char karakterKod;
+    private final char karakter;
 
-    Jel(char karakterKod) {
-        this.karakterKod = karakterKod;
-    }
-
-    public char getKarakterKod() {
-        return karakterKod;
+    Jel(char karakter) {
+        this.karakter = karakter;
     }
 
     @Override
     public String toString() {
-        return String.valueOf(karakterKod);
+        return String.valueOf(karakter);
     }
 }

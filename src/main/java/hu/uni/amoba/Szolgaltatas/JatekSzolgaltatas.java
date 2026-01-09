@@ -1,103 +1,78 @@
 package hu.uni.amoba.Szolgaltatas;
 
-import hu.uni.amoba.Modell.Palya;
-import hu.uni.amoba.Modell.Koordinata;
-import hu.uni.amoba.Modell.Jel;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
+import hu.uni.amoba.Modell.*;
 import java.util.Random;
 
 public class JatekSzolgaltatas {
-
-    private final Palya palya;
-    private final Random veletlenGenerator = new Random();
+    private Palya palya;
+    private final AdatbazisKezelo db;
+    private final Random rand = new Random();
 
     public JatekSzolgaltatas(int n, int m) {
         this.palya = new Palya(n, m);
+        this.db = new AdatbazisKezelo();
     }
 
-    public Palya getPalya() {
-        return palya;
-    }
+    public Palya getPalya() { return palya; }
+    public void setPalya(Palya p) { this.palya = p; }
+    public AdatbazisKezelo getDb() { return db; }
 
-    public boolean lepesTetele(Koordinata koord, Jel jel) {
-        if (!szabalyosLepesE(koord)) {
-            System.out.println("Hiba: Érvénytelen lépés (foglalt vagy szabálytalan).");
-            return false;
-        }
-        palya.jelElhelyezese(koord, jel);
+    public boolean lepes(Koordinata k, Jel jel) {
+        if (!szabalyosE(k)) return false;
+        palya.jelElhelyezese(k, jel);
         return true;
     }
 
+    public boolean szabalyosE(Koordinata k) {
+        if (palya.getMezoErtek(k.sor(), k.oszlop()) == null) return false; // pályán kívül
+        if (palya.getMezoErtek(k.sor(), k.oszlop()) != Jel.URES) return false; // foglalt
 
-    public boolean szabalyosLepesE(Koordinata koord) {
-        int sor = koord.sor();
-        int oszlop = koord.oszlop();
+        // Ha üres a pálya, bárhova léphet (első lépés)
+        boolean uresPalya = true;
+        cimke: for(int i=0; i<palya.getSorokSzama(); i++)
+            for(int j=0; j<palya.getOszlopokSzama(); j++)
+                if(palya.getMezoErtek(i, j) != Jel.URES) { uresPalya = false; break cimke; }
 
-        if (sor < 0 || sor >= palya.getSorokSzama() ||
-                oszlop < 0 || oszlop >= palya.getOszlopokSzama()) {
-            return false;
-        }
+        if (uresPalya) return true;
 
-        if (palya.getMezoErtek(sor, oszlop) != Jel.URES) {
-            return false;
-        }
-
-        if (palyaUresE()) {
-            return true;
-        }
-
-        return vanSzomszedja(sor, oszlop);
-    }
-
-    private boolean palyaUresE() {
-        for(int i = 0; i < palya.getSorokSzama(); i++) {
-            for(int j = 0; j < palya.getOszlopokSzama(); j++) {
-                if(palya.getMezoErtek(i, j) != Jel.URES) return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean vanSzomszedja(int sor, int oszlop) {
+        // Szomszéd vizsgálat
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
-                if (i == 0 && j == 0) continue;
-                Jel szomszed = palya.getMezoErtek(sor + i, oszlop + j);
-                if (szomszed != null && szomszed != Jel.URES) {
-                    return true;
-                }
+                if (i==0 && j==0) continue;
+                Jel szomszed = palya.getMezoErtek(k.sor()+i, k.oszlop()+j);
+                if (szomszed != null && szomszed != Jel.URES) return true;
             }
         }
         return false;
     }
 
     public void gepiLepes() {
-        int probalkozas = 0;
-        while (probalkozas < 1000) {
-            int sor = veletlenGenerator.nextInt(palya.getSorokSzama());
-            int oszlop = veletlenGenerator.nextInt(palya.getOszlopokSzama());
-            Koordinata koord = new Koordinata(sor, oszlop);
-
-            if (szabalyosLepesE(koord)) {
-                palya.jelElhelyezese(koord, Jel.O);
-                System.out.println(">>> A gép lépése: " + (sor + 1) + " " + (char)('A' + oszlop));
+        for(int i=0; i<1000; i++) {
+            Koordinata k = new Koordinata(rand.nextInt(palya.getSorokSzama()), rand.nextInt(palya.getOszlopokSzama()));
+            if (szabalyosE(k)) {
+                palya.jelElhelyezese(k, Jel.O);
+                System.out.println("Gép lépése: " + (k.sor()+1) + " " + (char)('A'+k.oszlop()));
                 return;
             }
-            probalkozas++;
         }
-        System.out.println("A gép nem tudott lépni.");
     }
 
-    public void jatekMentese(String fajlnev) throws IOException {
-        String tartalom = palya.toString();
-        Files.writeString(Path.of(fajlnev), tartalom);
+    public boolean nyertE(Jel jel) {
+        for (int i = 0; i < palya.getSorokSzama(); i++) {
+            for (int j = 0; j < palya.getOszlopokSzama(); j++) {
+                if (palya.getMezoErtek(i, j) == jel) {
+                    if (check(i, j, 0, 1, jel) || check(i, j, 1, 0, jel) ||
+                            check(i, j, 1, 1, jel) || check(i, j, 1, -1, jel)) return true;
+                }
+            }
+        }
+        return false;
     }
 
-    public void jatekBetoltese(String fajlnev) throws IOException {
-        List<String> sorok = Files.readAllLines(Path.of(fajlnev));
-        System.out.println("DEBUG: Betöltés funkció meghívva: " + fajlnev);
+    private boolean check(int r, int c, int dr, int dc, Jel jel) {
+        for (int k = 1; k < 4; k++) { // +3 további mezőt nézünk (összesen 4)
+            if (palya.getMezoErtek(r + k*dr, c + k*dc) != jel) return false;
+        }
+        return true;
     }
 }

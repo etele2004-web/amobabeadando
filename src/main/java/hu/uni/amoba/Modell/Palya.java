@@ -11,18 +11,13 @@ public class Palya {
         this.sorokSzama = sorokSzama;
         this.oszlopokSzama = oszlopokSzama;
         this.racs = new Jel[sorokSzama][oszlopokSzama];
-        palyaTorlese();
-    }
-
-    private void palyaTorlese() {
         for (int i = 0; i < sorokSzama; i++) {
             Arrays.fill(racs[i], Jel.URES);
         }
     }
 
-    public void jelElhelyezese(Koordinata koord, Jel jel) {
-        // Feltételezzük, hogy az ellenőrzés már megtörtént a Szolgáltatásban
-        racs[koord.sor()][koord.oszlop()] = jel;
+    public void jelElhelyezese(Koordinata k, Jel jel) {
+        racs[k.sor()][k.oszlop()] = jel;
     }
 
     public Jel getMezoErtek(int sor, int oszlop) {
@@ -37,19 +32,19 @@ public class Palya {
 
     @Override
     public String toString() {
-        StringBuilder kimenet = new StringBuilder();
-        kimenet.append("  ");
+        StringBuilder sb = new StringBuilder();
+        sb.append("  ");
         for (int j = 0; j < oszlopokSzama; j++) {
-            kimenet.append((char)('A' + j)).append(" ");
+            sb.append((char)('A' + j)).append(" ");
         }
-        kimenet.append("\n");
+        sb.append("\n");
         for (int i = 0; i < sorokSzama; i++) {
-            kimenet.append(i + 1).append(i < 9 ? " " : "");
+            sb.append(i + 1).append(i < 9 ? " " : "");
             for (int j = 0; j < oszlopokSzama; j++) {
-                kimenet.append(racs[i][j].getKarakterKod()).append(" ");
+                sb.append(racs[i][j]).append(" ");
             }
-            kimenet.append("\n");
+            sb.append("\n");
         }
-        return kimenet.toString();
+        return sb.toString();
     }
 }
