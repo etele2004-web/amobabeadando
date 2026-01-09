@@ -11,7 +11,6 @@ public class JatekIndito {
         JatekSzolgaltatas jatek = new JatekSzolgaltatas();
         Scanner beolvaso = new Scanner(System.in);
 
-        // Lista kiírása
         jatek.getAdatbazis().listazas();
 
         System.out.print("Neved: ");
@@ -26,7 +25,6 @@ public class JatekIndito {
         }
 
         while (true) {
-            // Kirajzoljuk a pályát
             System.out.println(jatek.getPalya());
 
             System.out.println("Te jössz (pl: 5 C) vagy 'mentes':");
@@ -39,10 +37,8 @@ public class JatekIndito {
             }
 
             try {
-                // Bemenet feldolgozása
                 String[] reszek = bemenet.split(" ");
                 int sor = Integer.parseInt(reszek[0]) - 1;
-                // 'A' betű kivonása, így kapunk számot (B - A = 1)
                 int oszlop = reszek[1].charAt(0) - 'A';
 
                 boolean siker = jatek.lepes(sor, oszlop, Jel.X);

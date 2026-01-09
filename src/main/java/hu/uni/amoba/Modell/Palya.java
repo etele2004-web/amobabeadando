@@ -3,14 +3,13 @@ package hu.uni.amoba.Modell;
 public class Palya {
     private int sorok;
     private int oszlopok;
-    private Jel[][] tabla; // Sima 2D tömb
+    private Jel[][] tabla;
 
     public Palya(int sorok, int oszlopok) {
         this.sorok = sorok;
         this.oszlopok = oszlopok;
         this.tabla = new Jel[sorok][oszlopok];
 
-        // Két for ciklussal feltöltjük üreessel
         for (int i = 0; i < sorok; i++) {
             for (int j = 0; j < oszlopok; j++) {
                 tabla[i][j] = Jel.URES;
@@ -23,7 +22,6 @@ public class Palya {
     }
 
     public Jel getMezo(int sor, int oszlop) {
-        // Egyszerű ellenőrzés: benne vagyunk-e a keretben?
         if (sor < 0 || sor >= sorok) return null;
         if (oszlop < 0 || oszlop >= oszlopok) return null;
 
@@ -33,18 +31,17 @@ public class Palya {
     public int getSorok() { return sorok; }
     public int getOszlopok() { return oszlopok; }
 
-    // Így írja ki a pályát egy kezdő:
     public String toString() {
-        String kimenet = "  A B C D E F G H I J\n"; // Fejléc fixen
+        String kimenet = "  A B C D E F G H I J\n";
 
         for (int i = 0; i < sorok; i++) {
-            kimenet = kimenet + (i + 1) + " "; // Sor száma
-            if (i < 9) kimenet = kimenet + " "; // Hogy szépen álljon a 10-es
+            kimenet = kimenet + (i + 1) + " ";
+            if (i < 9) kimenet = kimenet + " ";
 
             for (int j = 0; j < oszlopok; j++) {
                 kimenet = kimenet + tabla[i][j] + " ";
             }
-            kimenet = kimenet + "\n"; // Új sor
+            kimenet = kimenet + "\n";
         }
         return kimenet;
     }
