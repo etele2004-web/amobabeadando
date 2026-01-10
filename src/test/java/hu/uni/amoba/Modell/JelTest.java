@@ -14,7 +14,6 @@ class JelTest {
 
     @Test
     void tesztErtekek() {
-        // Ellenőrizzük, hogy megvan-e mind a 3 érték
         assertEquals(3, Jel.values().length);
     }
 }
