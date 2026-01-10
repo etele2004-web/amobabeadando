@@ -32,7 +32,7 @@ public class JatekIndito {
 
             if (bemenet.equals("mentes")) {
                 XmlKezelo.mentes(jatek.getPalya(), nev);
-                System.out.println("Elmentve. Viszlát!");
+                System.out.println("Elmentve.");
                 break;
             }
 
