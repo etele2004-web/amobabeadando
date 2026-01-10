@@ -1,9 +1,5 @@
 <amoba>
-<jatekos>Etele</jatekos>
-<lepes sor='2' oszlop='1'>O</lepes>
-<lepes sor='3' oszlop='2'>O</lepes>
-<lepes sor='4' oszlop='2'>X</lepes>
-<lepes sor='5' oszlop='1'>O</lepes>
-<lepes sor='5' oszlop='2'>X</lepes>
-<lepes sor='6' oszlop='2'>X</lepes>
+<jatekos>TesztElek</jatekos>
+<lepes sor='0' oszlop='0'>X</lepes>
+<lepes sor='5' oszlop='5'>O</lepes>
 </amoba>
